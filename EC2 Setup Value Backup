@@ -1,0 +1,21 @@
+INSTANCE_ID="i-xxxxxxxxxxxxxxxxx"
+REGION="ap-northeast-2"
+
+aws ec2 describe-instances \
+  --region "$REGION" \
+  --instance-ids "$INSTANCE_ID" \
+  --query "Reservations[].Instances[].{
+    InstanceId:InstanceId,
+    InstanceType:InstanceType,
+    ImageId:ImageId,
+    VpcId:VpcId,
+    SubnetId:SubnetId,
+    PrivateIpAddress:PrivateIpAddress,
+    PublicIpAddress:PublicIpAddress,
+    IamInstanceProfile:IamInstanceProfile.Arn,
+    SecurityGroups:SecurityGroups,
+    KeyName:KeyName,
+    Tags:Tags,
+    BlockDeviceMappings:BlockDeviceMappings
+  }" \
+  --output json > ec2-before-work-$INSTANCE_ID.json
