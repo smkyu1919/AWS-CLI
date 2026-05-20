@@ -1,0 +1,25 @@
+#변수 (InstanceID)
+
+REGION=ap-northeast-2
+
+INSTANCE_IDS=(
+  i-aaaaaaaaaaaaaaaaa
+  i-bbbbbbbbbbbbbbbbb
+  i-ccccccccccccccccc
+)
+
+IDS_CSV=$(IFS=,; echo "${INSTANCE_IDS[*]}")
+
+=============================================================================================================
+#구동
+
+aws ec2 describe-instances \
+  --region "$REGION" \
+  --instance-ids "${INSTANCE_IDS[@]}" \
+  --query 'Reservations[].Instances[].BlockDeviceMappings[].{
+    DeviceName:DeviceName,
+    VolumeId:Ebs.VolumeId,
+    DeleteOnTermination:Ebs.DeleteOnTermination,
+    Status:Ebs.Status
+  }' \
+  --output table
