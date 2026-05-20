@@ -1,0 +1,68 @@
+#변수 (InstanceID)
+
+REGION=ap-northeast-2
+
+INSTANCE_IDS=(
+  i-aaaaaaaaaaaaaaaaa
+  i-bbbbbbbbbbbbbbbbb
+  i-ccccccccccccccccc
+)
+
+IDS_CSV=$(IFS=,; echo "${INSTANCE_IDS[*]}")
+
+=============================================================================================================
+#구동
+
+for TG_ARN in $(aws elbv2 describe-target-groups \
+  --region "$REGION" \
+  --query 'TargetGroups[*].TargetGroupArn' \
+  --output text); do
+
+  TARGETS=$(aws elbv2 describe-target-health \
+    --region "$REGION" \
+    --target-group-arn "$TG_ARN" \
+    --query 'TargetHealthDescriptions[*].Target.Id' \
+    --output text)
+
+  for ID in "${INSTANCE_IDS[@]}"; do
+    if echo "$TARGETS" | grep -qw "$ID"; then
+      echo "=================================================="
+      echo "MATCHED INSTANCE TARGET"
+      echo "INSTANCE_ID : $ID"
+      echo "TARGET_GROUP : $TG_ARN"
+
+      aws elbv2 describe-target-groups \
+        --region "$REGION" \
+        --target-group-arns "$TG_ARN" \
+        --query 'TargetGroups[0].{
+          TargetGroupName:TargetGroupName,
+          TargetType:TargetType,
+          Protocol:Protocol,
+          Port:Port,
+          LoadBalancerArns:LoadBalancerArns
+        }' \
+        --output table
+    fi
+  done
+
+  for IP in $PRIVATE_IPS; do
+    if echo "$TARGETS" | grep -qw "$IP"; then
+      echo "=================================================="
+      echo "MATCHED IP TARGET"
+      echo "PRIVATE_IP : $IP"
+      echo "TARGET_GROUP : $TG_ARN"
+
+      aws elbv2 describe-target-groups \
+        --region "$REGION" \
+        --target-group-arns "$TG_ARN" \
+        --query 'TargetGroups[0].{
+          TargetGroupName:TargetGroupName,
+          TargetType:TargetType,
+          Protocol:Protocol,
+          Port:Port,
+          LoadBalancerArns:LoadBalancerArns
+        }' \
+        --output table
+    fi
+  done
+done
