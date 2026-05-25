@@ -1,0 +1,14 @@
+REGION="ap-northeast-2"
+
+aws ec2 describe-transit-gateway-vpc-attachments \
+  --region "${REGION}" \
+  --query "TransitGatewayVpcAttachments[].{
+    Name: Tags[?Key=='Name'].Value | [0],
+    OwnerId: VpcOwnerId,
+    VpcId: VpcId,
+    AttachmentId: TransitGatewayAttachmentId,
+    TransitGatewayId: TransitGatewayId,
+    State: State
+  }" \
+  --output json \
+| jq -r '.[] | "Name|\(.Name // "-")|OwnerId|\(.OwnerId // "-")|VpcId|\(.VpcId // "-")|AttachmentId|\(.AttachmentId // "-")|TransitGatewayId|\(.TransitGatewayId // "-")|State|\(.State // "-")"'
